@@ -1,5 +1,6 @@
 package com.project.onlineticketbooking.user;
 
+import com.project.onlineticketbooking.util.Jwt;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -9,10 +10,11 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     private final UserService userService;
+    private final Jwt jwtUtil;
 
-    @Autowired
-    public UserController(UserService userService) {
+    public UserController(UserService userService, Jwt jwtUtil) {
         this.userService = userService;
+        this.jwtUtil = jwtUtil;
     }
 
     @PostMapping("/create")
@@ -25,13 +27,17 @@ public class UserController {
         return userService.updateUser(user);
     }
 
-    @GetMapping("/data/{email}")
-    public UserResponse data(@PathVariable String email) {
+    @GetMapping("/data")
+    public UserResponse data(@RequestHeader("Authorization") String header) {
+
+        String token = header.replace("Bearer ", "");
+        String email = jwtUtil.extractEmailFromToken(token);
+
         return userService.findByEmail(email);
     }
 
     @PostMapping("/login")
-    public boolean login(@Valid @RequestBody User user) {
+    public String login(@Valid @RequestBody User user) {
         return userService.login(user);
     }
 }
