@@ -1,10 +1,12 @@
 package com.project.onlineticketbooking.util;
 
+import com.project.onlineticketbooking.user.UserDetailsImpl;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -23,9 +25,12 @@ public class Jwt {
         return Keys.hmacShaKeyFor(secret.getBytes());
     }
 
-    public String generateJwt(String email) {
+    public String generateJwt(UserDetailsImpl userDetails) {
         return Jwts.builder()
-                .subject(email)
+                .subject(userDetails.getUsername())
+                .claim("roles", userDetails.getAuthorities()
+                        .stream().map(GrantedAuthority::getAuthority).toList()
+                )
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expiration * 1000L))
                 .signWith(getKey())

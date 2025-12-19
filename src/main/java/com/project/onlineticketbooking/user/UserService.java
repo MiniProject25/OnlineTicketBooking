@@ -1,6 +1,7 @@
 package com.project.onlineticketbooking.user;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.project.onlineticketbooking.util.Jwt;
@@ -36,6 +37,10 @@ public class UserService {
         userRepository.deleteById(email);
     }
 
+    public User findByEmailForAuth(String email) {
+        return userRepository.findByEmail(email);
+    }
+
     public UserResponse updateUser(User user) {
         User existing = userRepository.findByEmail(user.getEmail());
 
@@ -60,11 +65,12 @@ public class UserService {
 
     public String login(User user) {
         User existing = userRepository.findByEmail(user.getEmail());
+        UserDetailsImpl userDetail = new UserDetailsImpl(user);
 
         try {
             if (existing != null) {
                 if (bcryptPasswordEncoder.matches(user.getPassword(), existing.getPassword())) {
-                    return jwtUtil.generateJwt(user.getEmail());
+                    return jwtUtil.generateJwt(userDetail);
                 }
                 else {
                     return null;

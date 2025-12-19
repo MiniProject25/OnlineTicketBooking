@@ -8,6 +8,13 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 public class SecurityConfig {
+
+    private final JwtAuthenticationFilter jwtAuth;
+
+    public SecurityConfig(JwtAuthenticationFilter jwtAuth) {
+        this.jwtAuth = jwtAuth;
+    }
+
     @Bean
     public BCryptPasswordEncoder bCryptPasswordEncoder() {
         return new BCryptPasswordEncoder();
@@ -15,14 +22,14 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.
-            authorizeHttpRequests(auth -> auth
-                    .requestMatchers("/user/create").permitAll()
-                    .requestMatchers("/user/login").permitAll()
-                    .anyRequest().authenticated()
-            );
-
-        http.csrf(csrf -> csrf.disable());
+        http
+                .csrf(csrf -> csrf.disable())
+                .authorizeHttpRequests(authRequest -> authRequest
+                        .requestMatchers("/user/create", "/user/login").permitAll()
+                        .requestMatchers("/user/**").hasRole("USER")
+                        .requestMatchers("/movie/create").hasRole("ADMIN")
+                        .anyRequest().authenticated())
+                .addFilterBefore(jwtAuth, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
