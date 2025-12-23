@@ -13,7 +13,7 @@ public class Movie {
     private String name;
     private String genre;
 
-    protected Movie() {}
+    public Movie() {}
 
     public Movie(String name, String genre) {
         this.name = name;

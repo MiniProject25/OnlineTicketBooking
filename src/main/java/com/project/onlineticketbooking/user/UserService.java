@@ -1,5 +1,7 @@
 package com.project.onlineticketbooking.user;
 
+import com.project.onlineticketbooking.exception.InvalidCredentialsException;
+import com.project.onlineticketbooking.exception.UserNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -38,11 +40,11 @@ public class UserService {
     }
 
     public User findByEmailForAuth(String email) {
-        return userRepository.findByEmail(email);
+        return userRepository.findById(email).orElseThrow(() -> new UserNotFoundException("User not found"));
     }
 
     public UserResponse updateUser(User user) {
-        User existing = userRepository.findByEmail(user.getEmail());
+        User existing = userRepository.findById(user.getEmail()).orElseThrow(() -> new UserNotFoundException("user not found"));
 
         if (existing != null) {
             // check whether password is changed
@@ -64,25 +66,13 @@ public class UserService {
     }
 
     public String login(User user) {
-        User existing = userRepository.findByEmail(user.getEmail());
-        UserDetailsImpl userDetail = new UserDetailsImpl(user);
+        User existing = userRepository.findById(user.getEmail()).orElseThrow(() -> new UserNotFoundException("User not found"));
 
-        try {
-            if (existing != null) {
-                if (bcryptPasswordEncoder.matches(user.getPassword(), existing.getPassword())) {
-                    return jwtUtil.generateJwt(userDetail);
-                }
-                else {
-                    return null;
-                }
-            }
-            else {
-                return null;
-            }
+        if (!bcryptPasswordEncoder.matches(user.getPassword(), existing.getPassword())) {
+            throw new InvalidCredentialsException("Incorrect email or password");
         }
-        catch (Exception e) {
-            System.out.println(e.getMessage());
-            return null;
-        }
+
+        UserDetailsImpl userDetails = new UserDetailsImpl(existing);
+        return jwtUtil.generateJwt(userDetails);
     }
 }

@@ -1,9 +1,11 @@
 package com.project.onlineticketbooking.booking;
 
+import com.project.onlineticketbooking.exception.UserNotFoundException;
 import com.project.onlineticketbooking.movie.Movie;
 import com.project.onlineticketbooking.movie.MovieRepository;
 import com.project.onlineticketbooking.user.User;
 import com.project.onlineticketbooking.user.UserRepository;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -22,7 +24,7 @@ public class BookingService {
     }
 
     public BookingResponse addBooking(BookingRequest booking) {
-        User user = userRepository.findByEmail(booking.getUserId());
+        User user = userRepository.findById(booking.getUserId()).orElseThrow(() -> new UsernameNotFoundException("User not found"));
         Movie movie = movieRepository.findById(booking.getMovieId()).orElse(null);
 
         Booking newBooking = new Booking(user, movie);
@@ -47,7 +49,7 @@ public class BookingService {
             User user = null;
             Movie movie = null;
             if (!bookingUpdate.getUserId().isEmpty())
-                user = userRepository.findByEmail(bookingUpdate.getUserId());
+                user = userRepository.findById(bookingUpdate.getUserId()).orElseThrow(() -> new UserNotFoundException("User not found"));
             if (bookingUpdate.getMovieId() != 0L)
                 movie = movieRepository.findById(bookingUpdate.getMovieId()).orElse(null);
 
@@ -64,5 +66,10 @@ public class BookingService {
     public List<BookingResponse> viewAllBooking() {
         List<Booking> bookings = bookingRepository.findAll();
         return bookings.stream().map(BookingResponse::from).toList();
+    }
+
+    public List<BookingResponse> getAllBookings(String email) {
+        return bookingRepository.findByUserEmail(email)
+                .stream().map(BookingResponse::from).toList();
     }
 }

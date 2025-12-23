@@ -35,4 +35,9 @@ public class BookingController {
     public BookingResponse cancelBooking(@PathVariable long bookingId) {
         return bookingService.cancelBooking(bookingId);
     }
+
+    @PostMapping("/data")
+    public List<BookingResponse> findByEmail(@RequestParam String email) {
+        return bookingService.getAllBookings(email);
+    }
 }

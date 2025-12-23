@@ -23,7 +23,7 @@ public class User {
     @Enumerated(EnumType.STRING)
     private UserRole role;
 
-    protected User() {}
+    public User() {}
 
     public User(String email, String password, String userName, UserRole role) {
         this.email = email;
